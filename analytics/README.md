@@ -1,15 +1,22 @@
-# Analytics
+# Titanic analytics
 
-Run `01_eda.ipynb` before `02_modeling.ipynb`. Both currently run as starters.
-Set `DOWNLOAD_TITANIC = True` in EDA only when ready for the first download.
-This saves the raw `titanic.csv` here; subsequent runs reuse the same file.
-The modeling notebook never calls sns.load_dataset.
+Run `01_eda.ipynb` followed by `02_modeling.ipynb`, or run `python eda.py`
+then `python modeling.py`. Only `eda.py` calls the Seaborn raw loader, and
+only when `titanic.csv` is absent. Later runs use the committed raw fallback.
+Modeling continues from `data/titanic_clean.csv` produced by that EDA run.
 
-Use an EDA copy for full-data descriptive cleaning. For modeling, use the same
-raw CSV lineage, apply only deterministic row/column decisions, split first,
-and fit imputers/encoders/scalers only on training data. Do not reuse values
-imputed from the full EDA dataset. Explain this separation in your write-up.
+`outputs/eda_interpretation.md` gives all missing percentages, age/fare IQR
+outlier counts, fare skewness, survival breakdowns, the two strongest
+correlations, four chart interpretations and an EDA z-score check. The EDA
+copy fills age for description, but the shared modeling CSV leaves it missing
+so the training-only pipeline learns the median.
 
-`data/` is for derived tables, `models/` for the complete fitted pipeline and
-`outputs/` for real metrics/interpretations. All remaining tasks are listed in
-the root checklist and notebook sections. No models or results are claimed yet.
+`modeling.py` uses a stratified split and trains Logistic Regression, Decision
+Tree and Random Forest with the same rows. It saves confusion matrices,
+ROC curves, a labeled tree, a baseline/class-weight/SMOTE comparison, Random
+Forest grid-search and OOB results, and a fare regression residual plot.
+`outputs/model_interpretation.md` reports all metrics in separate classifier
+and regression groups and recommends a classifier using actual values.
+`models/best_classifier_pipeline.joblib` contains both the fitted preprocessing
+and the selected estimator; reloading it gave the same predictions for five
+raw held-out inputs. Load joblib artifacts only from trusted sources.

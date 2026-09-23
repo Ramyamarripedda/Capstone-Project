@@ -1,0 +1,12 @@
+{
+  "raw_rows": 77,
+  "clean_rows": 77,
+  "dropped_rows": 0,
+  "categories": {
+    "Mystery": 32,
+    "Historical Fiction": 26,
+    "Classics": 19
+  },
+  "join_matches": true,
+  "fixed_gbp_to_inr": 105.5
+}
