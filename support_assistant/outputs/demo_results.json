@@ -1,0 +1,30 @@
+{
+  "indexed_chunks": 8,
+  "delivery_top_three": [
+    "doc_01",
+    "doc_05",
+    "doc_02"
+  ],
+  "examples": {
+    "policy": {
+      "intent": "policy_question",
+      "response": {
+        "answer": "Based on the retrieved context: Zepto delivers grocery and household essentials to serviceable pin codes within 10 to 30 minutes of order confirmation, depending on the customer's delivery zone and current order volume. Standard del",
+        "sources": [
+          "doc_01",
+          "doc_05",
+          "doc_02"
+        ],
+        "confidence": 1.0
+      }
+    },
+    "general": {
+      "intent": "general_question",
+      "response": {
+        "answer": "I can only answer questions about Zepto policies right now.",
+        "sources": [],
+        "confidence": 1.0
+      }
+    }
+  }
+}

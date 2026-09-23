@@ -1,5 +1,8 @@
 # Environments and local configuration
 .venv/
+.jupyter_kernel/
+.jupyter_runtime/
+.ipython_runtime/
 venv/
 .env
 .env.*
@@ -20,6 +23,7 @@ Thumbs.db
 support_assistant/chroma_db/
 support_assistant/model_cache/
 .cache/
+analytics/data/seaborn_cache/
 # Original assignment is not a submission artifact
 *.docx
 ~$*
