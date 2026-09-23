@@ -20,6 +20,10 @@ validating the entire capstone dependency set.
 
 Starter execution is a limited check: it does not validate web scraping, Titanic
 model training, embedding downloads, ChromaDB, LangGraph, the API or Docker.
+All four notebooks passed nbformat validation and ran top to bottom through
+nbclient using the registered AI kernel. EDA used its default offline starter
+mode without a Titanic CSV. No notebook errors occurred. A Windows Jupyter
+event-loop compatibility warning was emitted, but execution completed.
 Use a fresh environment before adding the remaining packages. Installation
 guidance: https://scikit-learn.org/stable/install and
 https://sbert.net/docs/installation.html.
