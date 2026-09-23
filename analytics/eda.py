@@ -68,11 +68,15 @@ def run() -> dict:
     eda["age"] = eda["age"].fillna(eda["age"].median())
 
     # Requested profiling is on the loaded raw data, before modifications.
-    with (OUT / "profile.txt").open("w", encoding="utf-8") as stream:
+    profile_path = OUT / "profile.txt"
+    with profile_path.open("w", encoding="utf-8") as stream:
         raw.info(buf=stream)
         stream.write("\nShape: " + str(raw.shape) + "\n\n")
         stream.write(raw.describe().to_string() + "\n\n")
         stream.write("Missing percentages:\n" + pd.Series(missing).to_string() + "\n")
+    profile_path.write_text(
+        "\n".join(line.rstrip() for line in profile_path.read_text(encoding="utf-8").splitlines())
+        + "\n", encoding="utf-8")
 
     outliers = {}
     fare_stats = {"mean": float(eda.fare.mean()), "median": float(eda.fare.median()),

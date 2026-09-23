@@ -1,61 +1,57 @@
-# Submission checklist
+# Assignment checklist
 
-This checklist records future assignment work, not claimed results.
+Checked items were implemented and locally verified unless a limitation is
+called out below. Review the generated interpretations in your own words.
 
 ## Repository
-- [x] One repository with the three required module folders and root README.
-- [x] Four runnable starter notebooks and per-module dependency specifications.
-- [ ] Complete and execute every module end to end; record genuine outputs.
-- [ ] Finish written interpretations, run instructions and design decisions.
-- [ ] Verify a feature branch has at least two commits and a visible merge to main.
-- [ ] Review files for secrets and submit the single public repository link.
+
+- [x] One public repository with `/data_pipeline`, `/analytics`,
+  `/support_assistant`, root README and module requirements.
+- [x] Four executable module notebooks plus readable `.py` implementations.
+- [x] Text write-ups in Markdown and actual numeric outputs, not screenshots.
+- [x] Feature branch with two commits and visible merge into main.
+- [ ] Final personal review of all analysis text and code before submission.
 
 ## Data pipeline
-- [ ] Scrape at least 60 real books across at least 3 categories, handling pagination.
-- [ ] Capture title, GBP price, text rating, availability and category.
-- [ ] Produce price_gbp float, rating integer 1-5, in_stock boolean, price_inr.
-- [ ] Justify parsing failures: median numeric imputation or dropping invalid rows.
-- [ ] Apply exactly 105.50 INR per GBP and document it.
-- [ ] Populate normalized categories/books tables with PK/FK and recreation code.
-- [ ] Execute >=5 SQL queries covering SELECT/WHERE, ORDER BY, LIMIT, DISTINCT,
-      IN or BETWEEN, and at least one JOIN. Save each query and actual output.
-- [ ] Read >=2 queries using pd.read_sql; reproduce the JOIN with pd.merge and
-      show matching results side by side.
+
+- [x] 77 books scraped from three categories with requests/BeautifulSoup.
+- [x] Title, listed GBP price, text rating, availability, category captured.
+- [x] GBP float, rating integer, stock Boolean, INR at fixed 105.50.
+- [x] Parse-failure choice explained; actual dropped count reported.
+- [x] Regenerable two-table SQLite database with primary/foreign keys.
+- [x] Six executed SQL queries cover all required clauses including JOIN.
+- [x] At least two `pd.read_sql` results and equal `pd.merge` JOIN output.
 
 ## Analytics
-- [ ] Load raw Titanic once with sns.load_dataset; immediately save titanic.csv.
-- [ ] Report info, describe, shape, class balance and all missing percentages.
-- [ ] Apply <5% row dropping, 5-30% imputation, and justify high-missing treatment.
-- [ ] Keep EDA imputation separate from train-only modeling preprocessing.
-- [ ] Age/fare histograms, boxplots and IQR outlier counts; fare mean/median/mode
-      and a justified skewness conclusion.
-- [ ] Boolean-mask survival rates by sex, pclass and sex+pclass.
-- [ ] Exact 6-column correlation heatmap and top two unique absolute correlations.
-- [ ] >=4 multivariate charts, each with 2-4 sentence interpretations.
-- [ ] Age/fare EDA standardization before/after statistics, not fed into modeling.
-- [ ] One stratified split before fitting modeling imputation/encoding/scaling.
-- [ ] Logistic Regression, Decision Tree, Random Forest on the same split.
-- [ ] Labeled plot_tree; confusion matrices, accuracy, precision, recall, F1, ROC/AUC.
-- [ ] Baseline vs balanced class weights vs training-fold-only SMOTE comparison.
-- [ ] Random Forest GridSearchCV over n_estimators, max_depth, max_features;
-      construct with oob_score=True and report best parameters and OOB score.
-- [ ] Fare multivariate regression: MAE, RMSE, R2, adjusted R2 and residual plot
-      with a written heteroscedasticity conclusion.
-- [ ] Comparison table with separate classification/regression metric groups and
-      3-5 sentence recommendation citing actual metrics.
-- [ ] Save/reload complete joblib pipeline and verify predictions on raw inputs.
+
+- [x] Single Seaborn raw load and committed `analytics/titanic.csv` fallback.
+- [x] Raw `info`, `describe`, shape, class balance and all missing rates.
+- [x] Threshold-based cleaning decisions and train-only modeling imputation.
+- [x] Age/fare histograms, boxplots, IQR counts and fare mean/median/mode.
+- [x] Boolean-mask survival rates by sex, pclass and both together.
+- [x] Exact six-variable correlation heatmap and top two absolute pairs.
+- [x] Four multivariate charts with written interpretations.
+- [x] Exploratory age/fare z-score before/after check.
+- [x] Stratified split before train-only imputation, encoding and scaling.
+- [x] Three classifiers on the same split, labeled tree, confusion matrices,
+  accuracy, precision, recall, F1, ROC curves and AUC.
+- [x] Baseline, balanced weights and train-only SMOTE comparison.
+- [x] GridSearchCV over required forest parameters and OOB score.
+- [x] Fare regression with MAE, RMSE, R2, adjusted R2, residual plot and
+  heteroscedasticity conclusion.
+- [x] Separate metric groups, classifier recommendation and reloaded complete
+  fitted joblib pipeline predicting on raw inputs.
 
 ## Support assistant
-- [x] Copy exact eight assignment document bodies into docs/doc_01.txt...doc_08.txt.
-- [ ] Chunk, embed with all-MiniLM-L6-v2 and index in persistent ChromaDB.
-- [ ] Actual role/context/task/format/length prompt, negative constraint, few-shot.
-- [ ] TypedDict LangGraph with classify_intent, retrieve_and_answer, direct_answer
-      and conditional routing using the exact keyword heuristic in default mode.
-- [ ] Genuine top-3 cosine retrieval and top-chunk canned mock answer.
-- [ ] Default MOCK_LLM=1 with no provider calls; unrelated questions use fixed text.
-- [ ] Pydantic answer/sources/confidence schema; optional real-output validation
-      retry logic with up to two additional attempts.
-- [ ] FastAPI POST /ask and actual policy/general example JSON responses.
-- [ ] Dockerfile successfully built and run locally with a working /ask endpoint.
-- [ ] Architecture narrative names ingestion, embedding, retrieval, generation
-      components and explains what MOCK_LLM changes.
+
+- [x] Exact eight supplied documents indexed with local MiniLM/Chroma cosine.
+- [x] Structured five-part prompt, negative constraint and few-shot example.
+- [x] TypedDict LangGraph with required three nodes and conditional routing.
+- [x] Exact default keyword rule, real top-three retrieval, templated mock
+  policy answer and fixed general answer without provider calls.
+- [x] Pydantic answer/sources/confidence and optional real-output retries.
+- [x] FastAPI POST `/ask`, locally served, with two actual JSON examples.
+- [x] Dockerfile and build/run instructions present.
+- [x] Docker image built and container POST endpoint tested locally.
+- [x] Architecture description covers ingestion, embedding, retrieval,
+  generation, components and MOCK_LLM branches.

@@ -1,29 +1,41 @@
-# Environment check
+# Environment and verification
 
-The starter notebooks were checked using the existing AI environment with Python
-3.12.9. No packages were installed, upgraded, downgraded or removed from AI.
+Python 3.12.9 from the existing AI environment was used to create a
+project-local `.venv` with `--system-site-packages`. Missing packages were
+installed in `.venv`, leaving AI itself unchanged. This local overlay can see
+AI's pre-existing package conflicts, so a clean project environment is the
+recommended reproducible setup described in the root README.
 
-Observed packages: nbformat 5.10.4, nbclient 0.10.2, ipykernel 6.29.5,
-requests 2.34.2, beautifulsoup4 4.13.3, numpy 2.2.6, pandas 3.0.3,
-matplotlib 3.10.1, seaborn 0.13.2, scikit-learn 1.9.0, joblib 1.4.2,
-fastapi 0.136.3, pydantic 2.13.4, uvicorn 0.34.0 and httpx 0.28.1.
+The run used imbalanced-learn 0.14.2, sentence-transformers 5.7.0,
+datasets 4.8.5, ChromaDB 1.5.8 and LangGraph 1.2.12 in `.venv`; it used
+AI's Python 3.12.9, pandas 3.0.3, scikit-learn 1.9.0, seaborn 0.13.2 and
+PyTorch 2.6.0. The module requirements give compatible version ranges, not
+an exact lockfile. `pip check` in AI was not clean even before this work;
+existing unrelated packages require conflicting pandas, protobuf and other
+versions. A new environment should be installed and checked as a unit.
 
-Missing full-assignment dependencies: imbalanced-learn, sentence-transformers,
-chromadb and langgraph. The starter notebooks report these without trying to
-install them automatically.
+Verified on this machine:
 
-`python -m pip check` reported pre-existing conflicts involving aiobotocore,
-bqplot, covjsonkit, databricks-sdk, datasets, elapid, lightning, mlflow,
-opentelemetry-proto and pynacl. For example, bqplot and mlflow require pandas below
-3 while this environment has pandas 3.0.3. This is not a clean environment for
-validating the entire capstone dependency set.
+- Live practice-site scrape: 77 clean books in three categories, SQLite
+  foreign keys valid, six SQL queries executed, pandas merge equal to SQL JOIN.
+- Titanic raw dataset downloaded once through Seaborn and committed as CSV;
+  EDA charts/results generated from 891 raw rows. Modeling ran on 889 rows,
+  including SMOTE, Random Forest tuning, fare regression and joblib reload.
+- MiniLM downloaded and embedded all eight documents in ChromaDB. Local
+  uvicorn served two HTTP POST `/ask` requests with default mock mode and
+  returned validated JSON. The policy example retrieved `doc_01` first.
+- Docker image built with CPU PyTorch, and a container served both POST
+  `/ask` examples on local host port 7861 with matching JSON responses.
+- All four notebooks passed `nbformat` validation and full top-to-bottom
+  execution with the project Python kernel. The support notebook launches
+  embedding and API checks in separate processes to keep Jupyter stable on
+  this Windows machine.
+- The optional real LLM path was implemented but not called; it requires an
+  API key and is not part of the graded baseline.
 
-Starter execution is a limited check: it does not validate web scraping, Titanic
-model training, embedding downloads, ChromaDB, LangGraph, the API or Docker.
-All four notebooks passed nbformat validation and ran top to bottom through
-nbclient using the registered AI kernel. EDA used its default offline starter
-mode without a Titanic CSV. No notebook errors occurred. A Windows Jupyter
-event-loop compatibility warning was emitted, but execution completed.
-Use a fresh environment before adding the remaining packages. Installation
-guidance: https://scikit-learn.org/stable/install and
+Docker Desktop's Linux engine was started for the container check. The
+temporary test container was stopped after validation.
+
+Official installation references:
+https://scikit-learn.org/stable/install and
 https://sbert.net/docs/installation.html.
