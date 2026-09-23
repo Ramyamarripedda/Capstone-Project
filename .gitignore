@@ -1,0 +1,26 @@
+# Environments and local configuration
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+.vscode/
+.idea/
+# Python and notebook temporary files
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+.DS_Store
+Thumbs.db
+# Rebuildable local embedding/model caches
+support_assistant/chroma_db/
+support_assistant/model_cache/
+.cache/
+# Original assignment is not a submission artifact
+*.docx
+~$*
+# Required CSV, SQLite, joblib and Markdown results are NOT ignored.

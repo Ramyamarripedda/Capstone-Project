@@ -1,0 +1,6 @@
+# Notebook tools only. Install module requirements separately as needed.
+# These are bounded dependency specifications, not a tested full-project lockfile.
+ipykernel>=6.29,<7
+nbformat>=5.10,<6
+nbclient>=0.10,<1
+notebook>=7,<8
