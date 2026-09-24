@@ -1,82 +1,95 @@
-# AIML Capstone Project
+﻿# AIML Capstone Project
 
-This project has three parts. They show how to collect data, study data and
-build a small question-answer service. All three parts are in this repository.
+This project has three modules: collecting book data, analysing Titanic data,
+and building a policy question-answer app. The notebooks, Python files and
+results for each module are in the folders below.
 
-| Folder | What it does | Main notebook |
-| --- | --- | --- |
-| data_pipeline | Scrapes book details, cleans them and saves them in SQLite | 01_data_pipeline.ipynb |
-| analytics | Studies Titanic data and trains prediction models | 01_eda.ipynb, then 02_modeling.ipynb |
-| support_assistant | Finds information in eight policy files and returns an answer | 01_support_assistant.ipynb |
+## 1. Book data pipeline
 
-The book data, Titanic data and policy text are three separate practice datasets.
-They are not combined into one training dataset.
+The script collects books from three categories on Books to Scrape. It cleans
+prices, ratings and stock details, then saves the data in CSV files and SQLite.
+The price conversion uses the assignment rate: **1 GBP = 105.50 INR**.
 
-## Run the app on this computer
+The latest run collected 77 books. Six SQL queries are included, and the JOIN
+result is compared with a pandas merge.
 
-Open a PowerShell terminal and run:
+- [Notebook](data_pipeline/01_data_pipeline.ipynb)
+- [SQL results](data_pipeline/outputs/query_results.md)
+- [Module notes](data_pipeline/README.md)
+
+## 2. Titanic analysis and models
+
+This module checks missing values, makes charts and compares survival rates.
+It then trains Logistic Regression, Decision Tree and Random Forest models.
+There is also a separate model for predicting fare.
+
+The cleaned dataset has 889 rows. The split uses 711 rows for training and
+178 for testing. The tuned Random Forest was selected using training
+cross-validation. Its test accuracy was about 84.3% and F1 was about 0.788.
+
+- [EDA notebook](analytics/01_eda.ipynb)
+- [Modeling notebook](analytics/02_modeling.ipynb)
+- [EDA results](analytics/outputs/eda_interpretation.md)
+- [Model results](analytics/outputs/model_interpretation.md)
+- [Module notes](analytics/README.md)
+
+## 3. Policy support assistant
+
+This app uses the eight policy documents provided in the assignment.
+MiniLM and Chroma find the relevant documents. LangGraph routes the question,
+and FastAPI returns the answer with source IDs and confidence.
+
+The default is mock mode. It returns a short excerpt from the closest
+matching document, so an answer can stop in the middle of a sentence.
+It does not need an LLM API key. The embedding model needs to download once.
+
+- [Notebook](support_assistant/01_support_assistant.ipynb)
+- [App explanation and Docker steps](support_assistant/README.md)
+- [Example responses](support_assistant/outputs/demo_results.json)
+
+## How to run
+
+Use Python 3.12. From the repository folder, create an environment and install
+the requirements:
 
 ```powershell
-cd D:\Ramya_AIML\Capstone_Project_AIML
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt -r data_pipeline/requirements.txt -r analytics/requirements.txt -r support_assistant/requirements.txt
+```
+
+If the project environment is already set up, skip those steps.
+In VS Code, select `.venv` as the notebook kernel and use **Run All**.
+Run the EDA notebook before the modeling notebook. The book scraper needs
+internet; the Titanic CSV is included in the repository.
+
+To start the support app from the repository folder:
+
+```powershell
+$env:MOCK_LLM = "1"
 .\.venv\Scripts\python.exe -m uvicorn main:app --app-dir support_assistant --host 127.0.0.1 --port 7860
 ```
 
-Open **http://127.0.0.1:7860/docs** in your browser. Click **POST /ask**, then
-**Try it out**. Enter the following JSON and click **Execute**:
+Open http://127.0.0.1:7860/docs. Click **POST /ask**, then **Try it out**.
+Enter this request and click **Execute**:
 
 ```json
 {"query": "What is the delivery fee?"}
 ```
 
-Try `{"query": "Hello"}` to see the general-question response.
-Keep the terminal open while using the app. Press **Ctrl+C** to stop it.
-The app is a FastAPI service; `/docs` is its built-in test screen.
-See [LOCAL_RUN.md](LOCAL_RUN.md) for setup on another computer, notebooks,
-Docker commands and common errors.
+A successful request shows code 200. Try `{"query": "Hello"}` for the other
+response type. Press **Ctrl+C** in the terminal to stop the app.
 
-## Run all three parts
+More setup steps are in [LOCAL_RUN.md](LOCAL_RUN.md). The package versions
+used for testing are listed in [ENVIRONMENT.md](ENVIRONMENT.md).
 
-Use the project `.venv` Python as the VS Code notebook kernel. Run the four
-notebooks in the table from top to bottom. The notebook code calls the small
-Python files in the same folder. The support notebook uses separate Python
-processes because direct model imports caused a kernel crash on this Windows
-installation.
+## Checks
 
-You can also run these scripts from the repository root:
+All four notebooks ran successfully. The app was also tested locally and
+inside Docker. The eight automated checks can be run with:
 
 ```powershell
-.\.venv\Scripts\python.exe data_pipeline/pipeline.py
-.\.venv\Scripts\python.exe analytics/eda.py
-.\.venv\Scripts\python.exe analytics/modeling.py
-.\.venv\Scripts\python.exe support_assistant/demo.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-The books script needs internet. Titanic is saved in `analytics/titanic.csv`
-for offline use. The MiniLM embedding model downloads once; later calls load
-the saved local copy. Default `MOCK_LLM=1` does not call an LLM provider and
-does not need an API key.
-
-## Main choices
-
-- The book pipeline uses a fixed rate of **1 GBP = 105.50 INR**. Invalid rows
-  are dropped and counted. The last run had 77 valid books and zero dropped rows.
-- Titanic cleaning follows the missing-value rules in the assignment. EDA
-  uses an age-filled copy for plots. Model preprocessing is fitted only on
-  training rows. The model is selected using training cross-validation.
-- The assistant uses real local embeddings and Chroma retrieval. Its default
-  answer is a fixed template containing a short policy excerpt. It is not a
-  free-form AI chatbot in mock mode. The policy text comes from the assignment.
-
-## Files to read
-
-- [Data pipeline notes](data_pipeline/README.md) and `outputs/query_results.md`.
-- [Analytics notes](analytics/README.md), `outputs/eda_interpretation.md` and
-  `outputs/model_interpretation.md`.
-- [Support assistant notes](support_assistant/README.md) and its saved JSON responses.
-- [Requirement checklist](SUBMISSION_CHECKLIST.md) and [review notes](REVIEW.md).
-
-The root requirements file installs notebook tools; each module has its own
-requirements file. [ENVIRONMENT.md](ENVIRONMENT.md) records the tested setup.
-Submit this one repository link after reading the code and checking that the
-written explanations match your understanding. The separate Telugu PDF is a
-learning guide and is not part of the submission repository.
+The optional real LLM mode was not tested with a provider. The book, Titanic
+and policy datasets are used for their own modules. They are not joined together.
