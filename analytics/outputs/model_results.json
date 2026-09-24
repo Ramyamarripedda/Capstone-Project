@@ -45,29 +45,67 @@
       "f1": 0.7352941176470589
     }
   },
+  "confusion_matrices": {
+    "Logistic Regression": [
+      [
+        97,
+        13
+      ],
+      [
+        21,
+        47
+      ]
+    ],
+    "Decision Tree": [
+      [
+        100,
+        10
+      ],
+      [
+        24,
+        44
+      ]
+    ],
+    "Random Forest": [
+      [
+        96,
+        14
+      ],
+      [
+        19,
+        49
+      ]
+    ]
+  },
+  "training_cv_f1": {
+    "Logistic Regression": 0.7099713431207411,
+    "Decision Tree": 0.701044197537135,
+    "Random Forest": 0.7398374685364977,
+    "Tuned Random Forest": 0.7674834117542954
+  },
   "grid_search": {
     "best_parameters": {
       "model__max_depth": 10,
       "model__max_features": 0.8,
-      "model__n_estimators": 200
+      "model__n_estimators": 100
     },
-    "cross_validated_f1": 0.7665437063819046,
-    "oob_score": 0.8326300984528833,
+    "cross_validated_f1": 0.7674834117542954,
+    "oob_score": 0.8312236286919831,
     "test_metrics": {
       "accuracy": 0.8426966292134831,
       "precision": 0.8125,
       "recall": 0.7647058823529411,
       "f1": 0.7878787878787878,
-      "auc": 0.8310160427807487
+      "auc": 0.8269385026737969
     }
   },
   "regression": {
-    "mae": 21.09975833447359,
-    "rmse": 41.70224716561009,
-    "r2": 0.3481581177933667,
-    "adjusted_r2": 0.30912566975704137,
+    "mae": 21.099758334473602,
+    "rmse": 41.70224716561008,
+    "r2": 0.3481581177933668,
+    "adjusted_r2": 0.31730169733388114,
     "test_rows": 178,
-    "transformed_features": 10
+    "transformed_features": 8
   },
   "best_classifier": "Tuned Random Forest",
   "selected_metrics": {
@@ -75,7 +113,7 @@
     "precision": 0.8125,
     "recall": 0.7647058823529411,
     "f1": 0.7878787878787878,
-    "auc": 0.8310160427807487
+    "auc": 0.8269385026737969
   },
   "saved_pipeline_reload_matches": true
 }

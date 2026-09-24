@@ -1,22 +1,36 @@
-# Titanic analytics
+# Titanic analysis
 
-Run `01_eda.ipynb` followed by `02_modeling.ipynb`, or run `python eda.py`
-then `python modeling.py`. Only `eda.py` calls the Seaborn raw loader, and
-only when `titanic.csv` is absent. Later runs use the committed raw fallback.
-Modeling continues from `data/titanic_clean.csv` produced by that EDA run.
+This part studies which passengers survived and then builds prediction models.
+Run `01_eda.ipynb` before `02_modeling.ipynb`. The matching scripts are `eda.py`
+and `modeling.py`. Follow the setup in the root README.
 
-`outputs/eda_interpretation.md` gives all missing percentages, age/fare IQR
-outlier counts, fare skewness, survival breakdowns, the two strongest
-correlations, four chart interpretations and an EDA z-score check. The EDA
-copy fills age for description, but the shared modeling CSV leaves it missing
-so the training-only pipeline learns the median.
+The first EDA run loads Titanic through Seaborn and saves `titanic.csv`.
+Later runs read that file. Both notebooks use this one dataset. Two rows
+with missing port information are removed. Deck is mostly missing, and
+embark_town repeats embarked, so these two columns are removed.
 
-`modeling.py` uses a stratified split and trains Logistic Regression, Decision
-Tree and Random Forest with the same rows. It saves confusion matrices,
-ROC curves, a labeled tree, a baseline/class-weight/SMOTE comparison, Random
-Forest grid-search and OOB results, and a fare regression residual plot.
-`outputs/model_interpretation.md` reports all metrics in separate classifier
-and regression groups and recommends a classifier using actual values.
-`models/best_classifier_pipeline.joblib` contains both the fitted preprocessing
-and the selected estimator; reloading it gave the same predictions for five
-raw held-out inputs. Load joblib artifacts only from trusted sources.
+Age is filled with its median for EDA plots. The shared file
+`data/titanic_clean.csv` keeps missing ages so each training pipeline learns
+its own median after the split. This avoids using test information in training.
+The `alive` column directly reveals the target and is not used as a predictor.
+
+Read these result files:
+
+- `outputs/eda_interpretation.md`: missing percentages, outliers, survival rates,
+  strongest correlations, chart explanations and the z-score check.
+- `outputs/model_interpretation.md`: three classifier scores, confusion counts,
+  training CV scores, imbalance comparison, tuning, regression and model choice.
+- `outputs/model_results.json`: the same measured results in a code-readable form.
+
+There are three classifiers: Logistic Regression, Decision Tree and Random
+Forest. The training data is used for preprocessing, cross-validation and
+tuning. The test data is used to report performance. SMOTE changes training
+rows only. The highest training CV F1 decides which complete pipeline is saved
+in `models/best_classifier_pipeline.joblib`.
+
+Fare prediction is a separate linear-regression task. Its errors use different
+units from classification scores. One category level is dropped for regression
+so redundant dummy columns are not counted in adjusted R2.
+
+The saved pipeline is checked by reloading it and predicting from five raw
+rows. Only load joblib files from a trusted source.
