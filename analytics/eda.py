@@ -38,10 +38,10 @@ def load_raw() -> pd.DataFrame:
 def make_clean_base(raw: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     missing = raw.isna().mean().mul(100)
     affected = {name: round(float(rate), 3) for name, rate in missing.items() if rate > 0}
-    # cabin has too little observed data; embark_town repeats embarked.
-    cleaned = raw.drop(columns=["deck", "embark_town"])
-    # Both are under 5% missing in the supplied dataset.
-    cleaned = cleaned.dropna(subset=["embarked"])
+    # Both port columns are under 5% missing. Drop those rows first, then
+    # remove the repeated town column and the mostly empty deck column.
+    cleaned = raw.dropna(subset=["embarked", "embark_town"])
+    cleaned = cleaned.drop(columns=["deck", "embark_town"])
     # Keep age NaN in the shared file. EDA uses a median-filled copy, while the
     # predictive pipeline learns an age median from training rows only.
     return cleaned.reset_index(drop=True), affected
@@ -156,6 +156,7 @@ def run() -> dict:
         "top_correlations": pairs[:2], "scaling": scaling,
         "family_class_rates": {f"{group}, class {pclass}": float(value)
                                for (group, pclass), value in family_rates.items()},
+        "raw_class_balance": {str(k): int(v) for k, v in raw.survived.value_counts().items()},
         "class_balance": {str(k): float(v) for k, v in base.survived.value_counts(normalize=True).items()},
     }
     (OUT / "eda_findings.json").write_text(json.dumps(findings, indent=2), encoding="utf-8")
@@ -189,20 +190,23 @@ def write_interpretation(f: dict, eda: pd.DataFrame) -> None:
 Raw data: {f['raw_shape'][0]} rows and {f['raw_shape'][1]} columns. After removing
 rows with missing embarked, the shared clean base has {f['clean_shape'][0]} rows.
 The original raw dataset is saved in `analytics/titanic.csv`.
+It has {f['raw_class_balance']['0']} non-survivors and {f['raw_class_balance']['1']} survivors.
+EDA means looking at the data before fitting models.
 
 ## Missing values and decisions
 
 {chr(10).join(f'- {name}: {rate:.3f}% missing.' for name, rate in f['missing_percent'].items())}
 
-The under-5% missing `embarked` rows were dropped. `embark_town` has the same
-under-5% pattern but repeats the port in `embarked`, so it was removed as a
-redundant column rather than dropping a second set of rows. `age` is in the
+Both port columns, `embarked` and `embark_town`, have less than 5% missing
+data. Rows missing either value were dropped; these were the same two rows.
+The repeated `embark_town` column was then removed. `age` is in the
 5%-30% band: the EDA view uses its median ({f['age_median_for_eda']:.2f}) for
-plots. The shared modeling input retains missing ages so its median is learned
-only from the training split. `deck` is more than 30% missing and was dropped
+plots. For model training, age is kept missing until the split. The model learns
+the replacement median from training rows only. This prevents test data from
+influencing training. `deck` is more than 30% missing and was dropped
 because a mostly empty column is unreliable for imputation.
 
-## One-variable analysis
+## Looking at age and fare
 
 IQR outliers: age {f['outliers']['age']['count']} outside
 [{f['outliers']['age']['lower']:.2f}, {f['outliers']['age']['upper']:.2f}],
@@ -212,7 +216,7 @@ Fare has mean {fare['mean']:.2f}, median {fare['median']:.2f}, and mode
 {fare['mode']:.2f}. Since mean > median > mode, it is right-skewed; the high
 fare tail in the histogram and box plot supports this description.
 
-## Two-variable analysis
+## Comparing groups and columns
 
 Survival by sex: {', '.join(f'{name} {value:.1%}' for name, value in sex.items())}.
 Survival by class: {', '.join(f'class {name} {value:.1%}' for name, value in cls.items())}.
@@ -231,11 +235,11 @@ largest absolute off-diagonal correlations are
 to move together or in opposite directions. {pair_explanations[0]}
 {pair_explanations[1]} Correlation alone does not prove a cause of survival.
 
-## Four-chart survival story
+## What the four charts show
 
 1. **Sex and class:** Survival is {female_first:.1%} for first-class women and
 {male_third:.1%} for third-class men. The gap shows that both recorded sex and
-passenger class are useful signals. It does not isolate either one's causal effect.
+passenger class are useful signals. The chart alone does not prove why the gap happened.
 
 2. **Age, class and survival:** Median age is {age_by_survival.get(1, float('nan')):.1f}
 among survivors and {age_by_survival.get(0, float('nan')):.1f} among non-survivors
@@ -251,8 +255,8 @@ as well as other booking details.
 4. **Family size and class:** The plot compares solo passengers, groups of 2-4,
 and groups of 5+ within each class. The actual survival rates are
 {', '.join(f'{name} {rate:.1%}' for name, rate in f['family_class_rates'].items())}.
-Both family size and class vary across groups, so the chart is descriptive
-rather than a causal explanation.
+Both family size and class vary across groups, so these rates describe the sample and do not prove cause and effect.
+Some family groups are small, so their percentages can be unstable.
 
 ## EDA scaling check
 

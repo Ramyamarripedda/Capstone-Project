@@ -9,12 +9,16 @@ recommended reproducible setup described in the root README.
 The run used imbalanced-learn 0.14.2, sentence-transformers 5.7.0,
 datasets 4.8.5, ChromaDB 1.5.8 and LangGraph 1.2.12 in `.venv`; it used
 AI's Python 3.12.9, pandas 3.0.3, scikit-learn 1.9.0, seaborn 0.13.2 and
-PyTorch 2.6.0. The module requirements give compatible version ranges, not
+PyTorch 2.6.0. Analytics pins scikit-learn for the saved model. Other requirements give version ranges, not
 an exact lockfile. `pip check` in AI was not clean even before this work;
 existing unrelated packages require conflicting pandas, protobuf and other
 versions. A new environment should be installed and checked as a unit.
 
 Verified on this machine:
+
+- Review update: all eight automated tests passed, including Windows SQLite
+  cleanup, prompt formatting, retries and model selection. The four notebooks,
+  local HTTP app and rebuilt Docker image were verified again.
 
 - Live practice-site scrape: 77 clean books in three categories, SQLite
   foreign keys valid, six SQL queries executed, pandas merge equal to SQL JOIN.

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import re
+import json
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -95,12 +96,16 @@ def scrape_books() -> pd.DataFrame:
                     raise ValueError(f"No book cards at {page_url}")
                 for card in cards:
                     rows.append({
-                        "title": card.select_one("h3 a").get("title", "").strip(),
-                        "price": card.select_one("p.price_color").get_text(strip=True),
+                        "title": (card.select_one("h3 a").get("title", "").strip()
+                                  if card.select_one("h3 a") else ""),
+                        "price": (card.select_one("p.price_color").get_text(strip=True)
+                                  if card.select_one("p.price_color") else ""),
                         "star_rating": next(
-                            (name for name in RATING if name in card.select_one("p.star-rating").get("class", [])),
+                            (name for name in RATING if card.select_one("p.star-rating")
+                             and name in card.select_one("p.star-rating").get("class", [])),
                             ""),
-                        "availability": card.select_one("p.instock.availability").get_text(" ", strip=True),
+                        "availability": (card.select_one("p.availability").get_text(" ", strip=True)
+                                         if card.select_one("p.availability") else ""),
                         "category": category,
                     })
                 next_link = soup.select_one("li.next a")
@@ -136,7 +141,7 @@ def load_database(books: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
         path.unlink()  # Rebuild this generated artifact from scratch on each run.
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         connection.executescript(SCHEMA)
         categories = sorted(books["category"].unique())
         connection.executemany(
@@ -160,7 +165,7 @@ def load_database(books: pd.DataFrame, path: Path) -> None:
 
 def query_and_compare(db_path: Path) -> tuple[dict[str, pd.DataFrame], bool]:
     results = {}
-    with sqlite3.connect(db_path) as connection:
+    with closing(sqlite3.connect(db_path)) as connection:
         for name, query in QUERIES.items():
             results[name] = pd.read_sql(query, connection)
         books = pd.read_sql("SELECT * FROM books", connection)
@@ -185,6 +190,7 @@ def run() -> dict:
         raise ValueError("Required 60 books from three categories not reached")
     out = ROOT / "outputs"
     out.mkdir(exist_ok=True)
+    (ROOT / "data").mkdir(exist_ok=True)
     raw.to_csv(ROOT / "data" / "books_raw.csv", index=False)
     cleaned.to_csv(ROOT / "data" / "books_clean.csv", index=False)
     db_path = ROOT / "data" / "books.db"
@@ -205,7 +211,7 @@ def run() -> dict:
     summary = {"raw_rows": len(raw), "clean_rows": len(cleaned),
                "dropped_rows": dropped, "categories": cleaned["category"].value_counts().to_dict(),
                "join_matches": same, "fixed_gbp_to_inr": GBP_TO_INR}
-    (out / "summary.json").write_text(__import__("json").dumps(summary, indent=2), encoding="utf-8")
+    (out / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return summary
 
 

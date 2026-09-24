@@ -1,73 +1,82 @@
-# Zepto Data and AI Platform
+# AIML Capstone Project
 
-One repository for the three modules in Q.docx: a books data pipeline, Titanic
-analytics, and a document-grounded Zepto policy assistant. The policy text is
-the assignment corpus, not verified current Zepto policy.
+This project has three parts. They show how to collect data, study data and
+build a small question-answer service. All three parts are in this repository.
 
-## Setup and run
+| Folder | What it does | Main notebook |
+| --- | --- | --- |
+| data_pipeline | Scrapes book details, cleans them and saves them in SQLite | 01_data_pipeline.ipynb |
+| analytics | Studies Titanic data and trains prediction models | 01_eda.ipynb, then 02_modeling.ipynb |
+| support_assistant | Finds information in eight policy files and returns an answer | 01_support_assistant.ipynb |
 
-Use Python 3.12. The root `requirements.txt` covers notebook tools; each
-module has its own `requirements.txt`. A fresh project environment is
-recommended because the existing AI environment has unrelated package
-conflicts (see `ENVIRONMENT.md`).
+The book data, Titanic data and policy text are three separate practice datasets.
+They are not combined into one training dataset.
 
-```powershell
-conda create -n capstone_aiml python=3.12 pip -y
-conda activate capstone_aiml
-python -m pip install -r requirements.txt
-python -m pip install -r data_pipeline/requirements.txt
-python -m pip install -r analytics/requirements.txt
-python -m pip install -r support_assistant/requirements.txt
-python -m pip check
-```
+## Run the app on this computer
 
-Select this Python environment as the VS Code notebook kernel and **Run All**
-in this order:
-
-1. `data_pipeline/01_data_pipeline.ipynb`
-2. `analytics/01_eda.ipynb`
-3. `analytics/02_modeling.ipynb`
-4. `support_assistant/01_support_assistant.ipynb`
-
-The notebooks run the readable `.py` scripts and display actual outputs.
-Equivalent script commands from the repository root:
+Open a PowerShell terminal and run:
 
 ```powershell
-python data_pipeline/pipeline.py
-python analytics/eda.py
-python analytics/modeling.py
-python support_assistant/ingest.py
-cd support_assistant
-python -m uvicorn main:app --host 127.0.0.1 --port 7860
+cd D:\Ramya_AIML\Capstone_Project_AIML
+.\.venv\Scripts\python.exe -m uvicorn main:app --app-dir support_assistant --host 127.0.0.1 --port 7860
 ```
 
-The books script needs the public scraping-practice site. EDA calls
-`sns.load_dataset('titanic')` only if the committed `analytics/titanic.csv`
-is absent. The support assistant downloads the public MiniLM model once and
-then runs its default mock LLM mode without a provider key.
+Open **http://127.0.0.1:7860/docs** in your browser. Click **POST /ask**, then
+**Try it out**. Enter the following JSON and click **Execute**:
 
-## Design decisions
+```json
+{"query": "What is the delivery fee?"}
+```
 
-- **Data pipeline:** scrape all pages of Mystery, Historical Fiction and
-  Classics with requests and BeautifulSoup; drop invalid required fields;
-  convert prices at the assignment constant **1 GBP = 105.50 INR**. SQLite
-  uses `categories` and `books` tables connected by a foreign key. Six SQL
-  query outputs and the matching pandas merge are in
-  `data_pipeline/outputs/query_results.md`.
-- **Analytics:** save the raw Titanic data once. The EDA copy fills age for
-  descriptive plots; the shared clean CSV keeps missing age values so each
-  modeling pipeline learns imputation on training data only. Charts and
-  interpretations are in `analytics/outputs/`. The fitted complete pipeline
-  is in `analytics/models/`.
-- **Support assistant:** embed eight short supplied documents with local
-  `all-MiniLM-L6-v2`; index them in Chroma with cosine distance; route policy
-  and general questions through LangGraph; return Pydantic-validated JSON
-  through FastAPI. `MOCK_LLM=1` is the default. The optional real-LLM path
-  needs `GROQ_API_KEY`. Docker serves the same app locally.
+Try `{"query": "Hello"}` to see the general-question response.
+Keep the terminal open while using the app. Press **Ctrl+C** to stop it.
+The app is a FastAPI service; `/docs` is its built-in test screen.
+See [LOCAL_RUN.md](LOCAL_RUN.md) for setup on another computer, notebooks,
+Docker commands and common errors.
 
-The analysis text is a worked interpretation of measured outputs. Review and
-rewrite it in your own words before submission, as Q.docx requires your own
-reasoning. `SUBMISSION_CHECKLIST.md` maps all assignment requirements to the
-files. Submit **this one public GitHub repository link** after review. The
-earlier `feature/project-structure` branch has two commits and a visible
-merge to `main`, satisfying the project-wide Git history requirement.
+## Run all three parts
+
+Use the project `.venv` Python as the VS Code notebook kernel. Run the four
+notebooks in the table from top to bottom. The notebook code calls the small
+Python files in the same folder. The support notebook uses separate Python
+processes because direct model imports caused a kernel crash on this Windows
+installation.
+
+You can also run these scripts from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe data_pipeline/pipeline.py
+.\.venv\Scripts\python.exe analytics/eda.py
+.\.venv\Scripts\python.exe analytics/modeling.py
+.\.venv\Scripts\python.exe support_assistant/demo.py
+```
+
+The books script needs internet. Titanic is saved in `analytics/titanic.csv`
+for offline use. The MiniLM embedding model downloads once; later calls load
+the saved local copy. Default `MOCK_LLM=1` does not call an LLM provider and
+does not need an API key.
+
+## Main choices
+
+- The book pipeline uses a fixed rate of **1 GBP = 105.50 INR**. Invalid rows
+  are dropped and counted. The last run had 77 valid books and zero dropped rows.
+- Titanic cleaning follows the missing-value rules in the assignment. EDA
+  uses an age-filled copy for plots. Model preprocessing is fitted only on
+  training rows. The model is selected using training cross-validation.
+- The assistant uses real local embeddings and Chroma retrieval. Its default
+  answer is a fixed template containing a short policy excerpt. It is not a
+  free-form AI chatbot in mock mode. The policy text comes from the assignment.
+
+## Files to read
+
+- [Data pipeline notes](data_pipeline/README.md) and `outputs/query_results.md`.
+- [Analytics notes](analytics/README.md), `outputs/eda_interpretation.md` and
+  `outputs/model_interpretation.md`.
+- [Support assistant notes](support_assistant/README.md) and its saved JSON responses.
+- [Requirement checklist](SUBMISSION_CHECKLIST.md) and [review notes](REVIEW.md).
+
+The root requirements file installs notebook tools; each module has its own
+requirements file. [ENVIRONMENT.md](ENVIRONMENT.md) records the tested setup.
+Submit this one repository link after reading the code and checking that the
+written explanations match your understanding. The separate Telugu PDF is a
+learning guide and is not part of the submission repository.

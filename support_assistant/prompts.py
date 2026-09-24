@@ -25,6 +25,6 @@ and confidence (number between 0 and 1).
 LENGTH: Use one short sentence.
 FEW-SHOT EXAMPLE:
 Question: What is the capital of France?
-Answer: {"answer":"I can only answer questions about Zepto policies right now.","sources":[],"confidence":1.0}
+Answer: {{"answer":"I can only answer questions about Zepto policies right now.","sources":[],"confidence":1.0}}
 QUESTION: {question}
 """

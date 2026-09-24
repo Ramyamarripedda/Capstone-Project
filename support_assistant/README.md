@@ -1,59 +1,84 @@
-# Zepto policy support assistant
+# Policy support assistant
 
-`docs/doc_01.txt` through `docs/doc_08.txt` contain the exact eight assignment
-documents. These are example project policies. From this directory:
+This is a small FastAPI app for the eight policy documents given in Q.docx.
+It uses the assignment text, not checked current company policy.
+See [local run steps](../LOCAL_RUN.md) for copy-and-paste commands.
 
-```powershell
-python ingest.py
-python -m uvicorn main:app --host 127.0.0.1 --port 7860
-```
+## How a question moves through the app
 
-The first run downloads `all-MiniLM-L6-v2` once. Leave `MOCK_LLM` unset or
-set it to `1` for the graded, keyless mode. `demo.py` runs the local graph/API
-checks and saves `outputs/demo_results.json`. The notebook calls these scripts
-and displays the prompt, retrieval results and graph routing.
+1. `ingest.py` reads the eight files in `docs/`. Each file is one short chunk.
+2. MiniLM turns each chunk into a list of numbers called an embedding.
+   Chroma stores these numbers in `zepto_policy_chunks` and uses cosine distance.
+3. `classify_intent` in `graph.py` checks the question. The required keywords
+   send it to `retrieve_and_answer`; other questions go to `direct_answer`.
+4. A policy question is embedded and compared with the stored chunks.
+   The three closest chunks are retrieved. The mock answer uses the first
+   200 characters of the closest chunk.
+5. `schemas.py` checks the answer, source IDs and confidence. `main.py` returns
+   them from POST `/ask` as JSON.
 
-Actual local uvicorn POST `/ask` examples with default mock mode:
+The LangGraph state is a TypedDict. The graph has the three named nodes and
+a conditional edge after classification. The keyword rule is deliberately
+simple: a question about an item may be missed if it has none of the listed
+keywords. It follows the assignment's exact default rule.
+
+## Mock and optional real-LLM modes
+
+Unset `MOCK_LLM`, or set it to `1`, for the required mode. It makes no LLM
+provider call. Embedding and retrieval still run for real on your computer.
+After the first download, the model is saved in `model_cache/` and loaded
+locally. Confidence is fixed at 1.0 by the assignment and is not a measured
+answer-accuracy score.
+
+Only `MOCK_LLM=0` enables the optional provider route. It needs `GROQ_API_KEY`;
+`GROQ_MODEL` can choose a supported model. The classification and answer nodes
+then call the provider. Retrieval remains local. `prompts.py` contains the
+role, context, task, format and length instructions, a negative constraint and
+a few-shot example. Invalid answer JSON gets at most two more attempts.
+After three invalid answers the app returns a clear error answer.
+
+## Recorded local examples
+
+Policy request:
 
 ```json
-{"query":"What is the delivery fee?"}
-{"answer":"Based on the retrieved context: Zepto delivers grocery and household essentials to serviceable pin codes within 10 to 30 minutes of order confirmation, depending on the customer's delivery zone and current order volume. Standard del","sources":["doc_01","doc_05","doc_02"],"confidence":1.0}
+{"query": "What is the delivery fee?"}
 ```
+
+Response:
 
 ```json
-{"query":"What is the capital of France?"}
-{"answer":"I can only answer questions about Zepto policies right now.","sources":[],"confidence":1.0}
+{
+  "answer": "Based on the retrieved context: Zepto delivers grocery and household essentials to serviceable pin codes within 10 to 30 minutes of order confirmation, depending on the customer's delivery zone and current order volume. Standard del",
+  "sources": [
+    "doc_01",
+    "doc_05",
+    "doc_02"
+  ],
+  "confidence": 1.0
+}
 ```
 
-The raw JSON response files are in `outputs/`. `doc_01` is the delivery
-policy and was the top match for the policy example. The mock answer uses
-the required first 200 characters of that chunk, so it demonstrates retrieval
-rather than serving as a polished customer answer.
+General request:
 
-## Architecture
-
-1. **Ingestion:** `ingest.py` reads each short document as one `doc_XX` chunk.
-2. **Embedding:** the same file uses local MiniLM vectors and stores them in
-   the persistent cosine-distance Chroma `zepto_policy_chunks` collection.
-3. **Retrieval:** `graph.py` classifies intent with the exact keyword rule in
-   default mode. LangGraph routes policy questions to `retrieve_and_answer`,
-   which retrieves the top three chunks, and general questions to
-   `direct_answer`, which does not retrieve.
-4. **Generation:** default `MOCK_LLM=1` uses a top-chunk template or fixed
-   string. `schemas.py` validates `answer`, `sources`, `confidence`. Optional
-   `MOCK_LLM=0` calls a real LLM using the structured prompt in `prompts.py`;
-   invalid JSON gets up to two corrective retries. Retrieval remains real and
-   local in both modes.
-
-## Docker
-
-```powershell
-docker build -t zepto-support .
-docker run --rm -p 7860:7860 zepto-support
+```json
+{"query": "What is the capital of France?"}
 ```
 
-The Dockerfile installs CPU PyTorch and the other dependencies, downloads
-MiniLM and builds the local index during image build, then serves FastAPI.
-It was built and run locally; both example POST requests returned the same
-valid JSON from the container on host port 7861. The uvicorn endpoint was
-also tested outside Docker. Cloud deployment is optional.
+Response:
+
+```json
+{
+  "answer": "I can only answer questions about Zepto policies right now.",
+  "sources": [],
+  "confidence": 1.0
+}
+```
+
+The first result is `doc_01`, the delivery policy. The policy answer may stop
+mid-sentence because the required mock template takes the first 200 characters.
+`demo.py` checks the graph and endpoint; its results are in `outputs/`.
+
+The Dockerfile installs CPU PyTorch, downloads the model and builds the index.
+The local server and Docker container are tested with both request types.
+No cloud deployment is required.
